@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Purchases - Star Agents</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">⭐ Star Agents</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+              data-bs-target="#navbarNav" aria-controls="navbarNav" 
+              aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="/agents">Агенти</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/purchases">Мої покупки</a></li>
+          <li class="nav-item"><a class="nav-link" href="/">Вийти</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">🛒 Мої покупки</h2>
+    <div id="purchasesList" class="row g-4"></div>
+  </div>
+
+  <script>
+    async function loadPurchases() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("❌ Ви не авторизовані. Спочатку увійдіть.");
+        window.location.href = "/";
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/purchases/me", {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const purchases = await response.json();
+          renderPurchases(purchases);
+        } else {
+          alert("⚠️ Помилка отримання покупок");
+        }
+      } catch (err) {
+        alert("⚠️ Помилка з'єднання з сервером");
+      }
+    }
+
+    function renderPurchases(purchases) {
+      const container = document.getElementById("purchasesList");
+      container.innerHTML = "";
+
+      if (purchases.length === 0) {
+        container.innerHTML = "<p class='text-center'>У вас ще немає покупок</p>";
+        return;
+      }
+
+      purchases.forEach(purchase => {
+        const card = `
+          <div class="col-md-4">
+            <div class="card shadow h-100">
+              <div class="card-body">
+                <h5 class="card-title">${purchase.agent.name}</h5>
+                <p class="card-text">${purchase.agent.description || "Без опису"}</p>
+                <p><strong>Дата покупки:</strong> ${new Date(purchase.created_at).toLocaleString()}</p>
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML("beforeend", card);
+      });
+    }
+
+    // Завантажуємо покупки при відкритті сторінки
+    loadPurchases();
+  </script>
+</body>
+</html>

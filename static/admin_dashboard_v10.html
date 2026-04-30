@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+
+    <!-- TailwindCSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // Tailwind dark mode config
+        tailwind.config = {
+            darkMode: 'class'
+        }
+    </script>
+
+    <style>
+        body {
+            transition: background-color .3s, color .3s;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 dark:text-gray-200 min-h-screen flex">
+
+<!-- SIDEBAR -->
+<aside id="sidebar"
+       class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform -translate-x-full transition-transform duration-300 z-50 md:translate-x-0 md:static md:shadow-lg p-6 space-y-6">
+
+    <h2 class="text-2xl font-bold mb-6 dark:text-white">AI Agent SaaS</h2>
+
+    <nav class="space-y-3">
+        <a href="#" class="block p-3 rounded-lg bg-blue-600 text-white font-semibold">
+            📊 Dashboard
+        </a>
+
+        <a href="#" class="block p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+            👤 Users
+        </a>
+
+        <a href="#" class="block p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+            🤖 Agents
+        </a>
+
+        <a href="#" class="block p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
+            💳 Purchases
+        </a>
+    </nav>
+
+    <button onclick="toggleTheme()"
+            class="w-full mt-10 bg-gray-200 dark:bg-gray-700 p-3 rounded-lg">
+        🌙 Перемкнути тему
+    </button>
+
+    <button onclick="logout()"
+            class="w-full bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg mt-4">
+        Вийти
+    </button>
+</aside>
+<div id="sidebar-backdrop"
+     class="fixed inset-0 bg-black bg-opacity-40 hidden md:hidden z-40 transition-opacity duration-300">
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="flex-1">
+
+    <!-- TOP BAR -->
+    <header class="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center md:hidden">
+        <button onclick="toggleSidebar()" class="text-2xl md:hidden">☰</button>
+        <button onclick="toggleTheme()" class="text-xl">🌙</button>
+    </header>
+
+    <!-- LOGIN BOX -->
+    <div id="login-box" class="max-w-md mx-auto mt-20 bg-white dark:bg-gray-800 p-8 rounded-xl shadow">
+        <h2 class="text-2xl font-bold mb-4">Вхід</h2>
+
+        <input id="email" type="text" placeholder="Email" value="admin@example.com"
+               class="w-full p-3 border rounded mb-3 dark:bg-gray-700 dark:border-gray-600">
+
+        <input id="password" type="password" placeholder="Пароль" value="admin123"
+               class="w-full p-3 border rounded mb-3 dark:bg-gray-700 dark:border-gray-600">
+
+        <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded">
+            Увійти
+        </button>
+
+        <p id="login-status" class="text-red-500 mt-3"></p>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard" class="hidden p-6 space-y-8">
+
+        <!-- KPI CARDS -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-gray-500 dark:text-gray-400">Total Purchases</h3>
+                <p id="kpi_total_purchases" class="text-3xl font-bold">0</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-gray-500 dark:text-gray-400">Total Revenue</h3>
+                <p id="kpi_total_revenue" class="text-3xl font-bold">0</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-gray-500 dark:text-gray-400">Unique Users</h3>
+                <p id="kpi_unique_users" class="text-3xl font-bold">0</p>
+            </div>
+
+        </div>
+
+        <!-- SECOND ROW KPI -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-gray-500 dark:text-gray-400">Total Topups</h3>
+                <p id="kpi_total_topups" class="text-3xl font-bold">0</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-gray-500 dark:text-gray-400">Total Spent</h3>
+                <p id="kpi_total_spent" class="text-3xl font-bold">0</p>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-gray-500 dark:text-gray-400">Net Flow</h3>
+                <p id="kpi_net_flow" class="text-3xl font-bold">0</p>
+            </div>
+
+        </div>
+
+        <!-- CHARTS -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-lg font-semibold mb-4">Purchases by Day</h3>
+                <canvas id="chart_purchases"></canvas>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-lg font-semibold mb-4">Topups by Day</h3>
+                <canvas id="chart_topups"></canvas>
+            </div>
+
+        </div>
+
+        <!-- TABLES -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-lg font-semibold mb-4">Top Agents</h3>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b dark:border-gray-700">
+                            <th class="py-2">Agent</th>
+                            <th class="py-2">Count</th>
+                            <th class="py-2">Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table_top_agents"></tbody>
+                </table>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
+                <h3 class="text-lg font-semibold mb-4">Top Users</h3>
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="border-b dark:border-gray-700">
+                            <th class="py-2">User</th>
+                            <th class="py-2">Count</th>
+                            <th class="py-2">Spent</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table_top_users"></tbody>
+                </table>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+/* ---------------- THEME ---------------- */
+function toggleTheme() {
+    document.documentElement.classList.toggle("dark");
+    localStorage.setItem(
+        "theme",
+        document.documentElement.classList.contains("dark") ? "dark" : "light"
+    );
+}
+
+if (localStorage.getItem("theme") === "light") {
+    document.documentElement.classList.remove("dark");
+}
+/* ---------------- LOGIN ---------------- */
+async function login() {
+    const emailEl = document.getElementById("email");
+    const passwordEl = document.getElementById("password");
+    const statusEl = document.getElementById("login-status");
+    const buttonEl = document.querySelector("#login-box button");
+
+    const email = emailEl.value.trim();
+    const password = passwordEl.value;
+
+    statusEl.textContent = "";
+
+    if (!email || !password) {
+        statusEl.textContent = "Введіть email і пароль";
+        return;
+    }
+
+    buttonEl.disabled = true;
+    const oldText = buttonEl.textContent;
+    buttonEl.textContent = "Входимо...";
+
+    try {
+        const res = await fetch(`${API}/auth/login`, {
+            method: "POST",
+            headers: {"Content-Type": "application/x-www-form-urlencoded"},
+            body: new URLSearchParams({
+                grant_type: "password",
+                username: email,
+                password: password
+            })
+        });
+
+        if (!res.ok) {
+            statusEl.textContent = "Невірний логін або пароль";
+            return;
+        }
+
+        const data = await res.json();
+
+        if (data.access_token) {
+            localStorage.setItem("access_token", data.access_token);
+
+            document.getElementById("login-box").classList.add("hidden");
+            document.getElementById("dashboard").classList.remove("hidden");
+
+            await loadDashboard();
+        } else {
+            statusEl.textContent = "Помилка авторизації (немає токена)";
+        }
+    } catch (e) {
+        console.error("Login error:", e);
+        statusEl.textContent = "Помилка з'єднання з сервером";
+    } finally {
+        buttonEl.disabled = false;
+        buttonEl.textContent = oldText;
+    }
+}
+/* ---------------- LOGOUT ---------------- */
+function logout() {
+    localStorage.removeItem("access_token");
+    location.reload();
+}
+
+/* ---------------- AUTH HEADER ---------------- */
+function authHeaders() {
+    return {
+        "Authorization": "Bearer " + localStorage.getItem("access_token")
+    };
+}
+
+/* ---------------- DASHBOARD LOAD ---------------- */
+async function loadDashboard() {
+    const res = await fetch(`${API}/analytics/dashboard`, {
+        headers: authHeaders()
+    });
+
+    const data = await res.json();
+
+    // KPI
+    document.getElementById("kpi_total_purchases").textContent =
+        data.purchases.total_purchases;
+    document.getElementById("kpi_total_revenue").textContent =
+        data.purchases.total_revenue;
+    document.getElementById("kpi_unique_users").textContent =
+        data.purchases.unique_users;
+
+    document.getElementById("kpi_total_topups").textContent =
+        data.balance.total_topups;
+    document.getElementById("kpi_total_spent").textContent =
+        data.balance.total_spent;
+    document.getElementById("kpi_net_flow").textContent =
+        data.balance.net_flow;
+
+    renderTables(data);
+    renderCharts(data);
+}
+
+/* ---------------- TABLES ---------------- */
+function renderTables(data) {
+    document.getElementById("table_top_agents").innerHTML =
+        data.purchases.top_agents
+            .map(a => `
+                <tr class="border-b dark:border-gray-700">
+                    <td class="py-2">${a.agent}</td>
+                    <td class="py-2">${a.count}</td>
+                    <td class="py-2">${a.revenue}</td>
+                </tr>
+            `)
+            .join("");
+
+    document.getElementById("table_top_users").innerHTML =
+        data.purchases.top_users
+            .map(u => `
+                <tr class="border-b dark:border-gray-700">
+                    <td class="py-2">${u.user}</td>
+                    <td class="py-2">${u.count}</td>
+                    <td class="py-2">${u.spent}</td>
+                </tr>
+            `)
+            .join("");
+}
+
+/* ---------------- CHARTS ---------------- */
+function renderCharts(data) {
+    const purchases = data.purchases.purchases_by_day;
+    const topups = data.balance.topups_by_day;
+
+    new Chart(document.getElementById("chart_purchases"), {
+        type: "line",
+        data: {
+            labels: purchases.map(p => p.day),
+            datasets: [{
+                label: "Purchases",
+                data: purchases.map(p => p.count),
+                borderColor: "#3b82f6",
+                backgroundColor: "rgba(59,130,246,0.3)"
+            }]
+        }
+    });
+
+    new Chart(document.getElementById("chart_topups"), {
+        type: "line",
+        data: {
+            labels: topups.map(t => t.day),
+            datasets: [{
+                label: "Topups",
+                data: topups.map(t => t.amount),
+                borderColor: "#10b981",
+                backgroundColor: "rgba(16,185,129,0.3)"
+            }]
+        }
+    });
+}
+
+/* ---------------- SIDEBAR ---------------- */
+function toggleSidebar() {
+    const sidebar = document.getElementById("sidebar");
+    const backdrop = document.getElementById("sidebar-backdrop");
+
+    const isOpen = !sidebar.classList.contains("-translate-x-full");
+
+    if (isOpen) {
+        sidebar.classList.add("-translate-x-full");
+        backdrop.classList.add("hidden");
+        backdrop.classList.remove("opacity-100");
+    } else {
+        sidebar.classList.remove("-translate-x-full");
+        backdrop.classList.remove("hidden");
+
+        setTimeout(() => {
+            backdrop.classList.add("opacity-100");
+        }, 10);
+    }
+}
+
+document.getElementById("sidebar-backdrop").addEventListener("click", () => {
+    toggleSidebar();
+});
+</script>

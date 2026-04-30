@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <title>E-commerce Support Chat</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+
+    <style>
+        /* === Fade-in for messages === */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(6px);
+            animation: fadeIn 0.35s ease forwards;
+        }
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* === Typing indicator fade-in === */
+        .typing-fade {
+            opacity: 0;
+            transform: translateY(6px);
+            animation: typingFadeIn 0.25s ease forwards;
+        }
+        @keyframes typingFadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* === Typing indicator fade-out === */
+        .typing-hide {
+            opacity: 1;
+            transform: translateY(0);
+            animation: typingFadeOut 0.25s ease forwards;
+        }
+        @keyframes typingFadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+        }
+
+        /* === Floating widget button === */
+        #chat-widget-btn {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        #chat-widget-btn:hover {
+            transform: scale(1.08);
+        }
+
+        /* === Floating chat window === */
+        #chat-container {
+            position: fixed;
+            bottom: 110px;
+            right: 24px;
+            width: 380px;
+            height: 520px;
+            background: #1f2937;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transform: scale(0.8);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.25s ease, opacity 0.25s ease;
+        }
+        #chat-container.open {
+            transform: scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-900 text-gray-100">
+
+<!-- Floating Chat Button -->
+<div id="chat-widget-btn">💬</div>
+
+<!-- Floating Chat Window -->
+<div id="chat-container" class="dark">
+    <div class="w-full h-full flex flex-col">
+
+        <!-- Header -->
+        <div class="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-semibold">E-commerce Support Agent</h1>
+                <p class="text-sm text-gray-400">Питайте про замовлення, доставку, оплату…</p>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="theme-toggle"
+                    class="text-xs px-3 py-1 rounded-full bg-gray-600 hover:bg-gray-500">
+                    Тема
+                </button>
+
+                <button id="reset-btn"
+                    class="text-xs px-3 py-1 rounded-full bg-red-500 hover:bg-red-600">
+                    Очистити
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="chat-window" class="flex-1 overflow-y-auto px-4 py-4 space-y-4"></div>
+
+        <!-- Input -->
+        <div class="border-t border-gray-700 px-4 py-3 flex gap-2">
+            <input id="message-input"
+                type="text"
+                placeholder="Напишіть повідомлення..."
+                class="flex-1 px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+            <button id="send-btn"
+                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold">
+                ➤
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+const API = "http://127.0.0.1:8000";
+
+const chatWindow = document.getElementById("chat-window");
+const inputEl = document.getElementById("message-input");
+const sendBtn = document.getElementById("send-btn");
+const resetBtn = document.getElementById("reset-btn");
+const themeToggle = document.getElementById("theme-toggle");
+const widgetBtn = document.getElementById("chat-widget-btn");
+const chatContainer = document.getElementById("chat-container");
+
+let typingIndicator = null;
+
+/* === Floating widget toggle === */
+widgetBtn.addEventListener("click", () => {
+    chatContainer.classList.toggle("open");
+});
+
+/* === Theme toggle === */
+function applyTheme() {
+    const theme = localStorage.getItem("theme") || "dark";
+    if (theme === "dark") {
+        document.documentElement.classList.add("dark");
+    } else {
+        document.documentElement.classList.remove("dark");
+    }
+}
+applyTheme();
+
+themeToggle.addEventListener("click", () => {
+    const isDark = document.documentElement.classList.contains("dark");
+    if (isDark) {
+        document.documentElement.classList.remove("dark");
+        localStorage.setItem("theme", "light");
+    } else {
+        document.documentElement.classList.add("dark");
+        localStorage.setItem("theme", "dark");
+    }
+});
+
+/* === Typing indicator === */
+function showTyping() {
+    if (typingIndicator) return;
+
+    typingIndicator = document.createElement("div");
+    typingIndicator.className = "flex items-end gap-2 justify-start typing-fade";
+
+    typingIndicator.innerHTML = `
+        <img src="https://api.dicebear.com/7.x/bottts/svg?seed=agent"
+             class="w-8 h-8 rounded-full shadow" />
+
+        <div class="px-3 py-2 rounded-2xl bg-gray-700 text-gray-300 text-sm rounded-bl-sm">
+            <div class="flex gap-1">
+                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+            </div>
+        </div>
+    `;
+
+    chatWindow.appendChild(typingIndicator);
+    chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: "smooth" });
+}
+
+function hideTyping() {
+    if (!typingIndicator) return;
+
+    typingIndicator.classList.remove("typing-fade");
+    typingIndicator.classList.add("typing-hide");
+
+    setTimeout(() => {
+        if (typingIndicator) {
+            typingIndicator.remove();
+            typingIndicator = null;
+        }
+    }, 250);
+}
+
+/* === Append message === */
+function appendMessage(text, role) {
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex items-end gap-2 " + (role === "user" ? "justify-end" : "justify-start");
+    wrapper.classList.add("fade-in");
+
+    const avatar = document.createElement("img");
+    avatar.className = "w-8 h-8 rounded-full shadow";
+    avatar.src = role === "user"
+        ? "https://api.dicebear.com/7.x/thumbs/svg?seed=user"
+        : "https://api.dicebear.com/7.x/bottts/svg?seed=agent";
+
+    const bubble = document.createElement("div");
+    bubble.className =
+        "max-w-[70%] px-3 py-2 rounded-2xl text-sm leading-relaxed " +
+        (role === "user"
+            ? "bg-blue-600 text-white rounded-br-sm"
+            : "bg-gray-700 text-gray-100 rounded-bl-sm");
+
+    bubble.textContent = text;
+
+    if (role === "user") {
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(avatar);
+    } else {
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+    }
+
+    chatWindow.appendChild(wrapper);
+    chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: "smooth" });
+}
+
+/* === Send message === */
+async function sendMessage() {
+    const text = inputEl.value.trim();
+    if (!text) return;
+
+    appendMessage(text, "user");
+    inputEl.value = "";
+    inputEl.focus();
+
+    showTyping();
+
+    try {
+        const res = await fetch(`${API}/chat/`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ message: text })
+        });
+
+        const data = await res.json();
+
+        hideTyping();
+        appendMessage(data.reply, "agent");
+    } catch (e) {
+        hideTyping();
+        appendMessage("Немає з'єднання з сервером.", "agent");
+    }
+}
+
+/* === Reset dialog === */
+async function resetDialog() {
+    try {
+        await fetch(`${API}/chat/reset`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" }
+        });
+        chatWindow.innerHTML = "";
+        appendMessage("Історію діалогу очищено.", "agent");
+    } catch (e) {
+        appendMessage("Не вдалося очистити діалог.", "agent");
+    }
+}
+
+sendBtn.addEventListener("click", sendMessage);
+resetBtn.addEventListener("click", resetDialog);
+
+inputEl.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+/* === Initial greeting === */
+appendMessage("Вітаю! Я ваш E-commerce Support Agent. Чим можу допомогти?", "agent");
+</script>
+
+</body>
+</html>

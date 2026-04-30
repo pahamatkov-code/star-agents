@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Star Agents Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="bg-dark text-white py-3">
+    <div class="container d-flex justify-content-between align-items-center">
+      <h1 class="h3 mb-0">Star Agents</h1>
+      <div>
+        <button id="logout-btn" class="btn btn-outline-light d-none">Вийти</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Login Section -->
+  <section class="container my-5" id="login-section">
+    <h2 class="text-center">Авторизація</h2>
+    <form id="login-form" class="text-center">
+      <input type="text" name="username" placeholder="Логін" class="form-control my-2" required>
+      <input type="password" name="password" placeholder="Пароль" class="form-control my-2" required>
+      <button type="submit" class="btn btn-primary">Увійти</button>
+    </form>
+  </section>
+
+  <!-- Agents Section -->
+  <section class="container my-5 d-none" id="agents-section">
+    <h2 class="text-center mb-4">Всі агенти</h2>
+    <div class="text-center mb-3">
+      <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createAgentModal">
+        ➕ Створити агента
+      </button>
+    </div>
+    <table class="table table-striped table-bordered">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Ім'я</th>
+          <th>Роль</th>
+          <th>Email</th>
+          <th>Департамент</th>
+          <th>Навички</th>
+          <th>Статус</th>
+          <th>Дії</th>
+        </tr>
+      </thead>
+      <tbody id="agents-table-body"></tbody>
+    </table>
+  </section>
+
+  <!-- Create Agent Modal -->
+  <div class="modal fade" id="createAgentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="create-agent-form">
+          <div class="modal-header">
+            <h5 class="modal-title">Створити нового агента</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input type="text" name="name" class="form-control mb-2" placeholder="Ім'я" required>
+            <input type="text" name="role" class="form-control mb-2" placeholder="Роль" required>
+            <input type="email" name="email" class="form-control mb-2" placeholder="Email" required>
+            <input type="text" name="department" class="form-control mb-2" placeholder="Департамент" required>
+            <input type="text" name="skills" class="form-control mb-2" placeholder="Навички" required>
+            <select name="status" class="form-select mb-2">
+              <option value="true">Активний</option>
+              <option value="false">Неактивний</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button type="submit" class="btn btn-primary">Створити</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-dark text-white text-center py-3">
+    <p>&copy; 2026 Star Agents. Усі права захищені.</p>
+  </footer>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    async function loadAgents() {
+      const res = await fetch("/agents");
+      if (res.status === 401) {
+        showLogin();
+        return;
+      }
+      const agents = await res.json();
+      const tbody = document.getElementById("agents-table-body");
+      tbody.innerHTML = "";
+      agents.forEach(agent => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${agent._id}</td>
+            <td>${agent.name}</td>
+            <td>${agent.role}</td>
+            <td>${agent.email}</td>
+            <td>${agent.department}</td>
+            <td>${agent.skills}</td>
+            <td>${agent.status ? "Активний" : "Неактивний"}</td>
+            <td>
+              <button class="btn btn-sm btn-danger" onclick="deleteAgent('${agent._id}')">🗑️</button>
+            </td>
+          </tr>
+        `;
+      });
+      showAgents();
+    }
+
+    document.getElementById("create-agent-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      data.status = data.status === "true";
+      await fetch("/agents", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      e.target.reset();
+      loadAgents();
+      bootstrap.Modal.getInstance(document.getElementById("createAgentModal")).hide();
+    });
+
+    async function deleteAgent(id) {
+      await fetch("/agents/" + id, { method: "DELETE" });
+      loadAgents();
+    }
+
+    // Авторизація
+    document.getElementById("login-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const formData = new FormData(e.target);
+      const data = Object.fromEntries(formData.entries());
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(data)
+      });
+      if (res.ok) {
+        loadAgents();
+      } else {
+        alert("Невірні дані для входу");
+      }
+    });
+
+    document.getElementById("logout-btn").addEventListener("click", async () => {
+      await fetch("/logout");
+      showLogin();
+    });
+
+    function showLogin() {
+      document.getElementById("login-section").classList.remove("d-none");
+      document.getElementById("agents-section").classList.add("d-none");
+      document.getElementById("logout-btn").classList.add("d-none");
+    }
+
+    function showAgents() {
+      document.getElementById("login-section").classList.add("d-none");
+      document.getElementById("agents-section").classList.remove("d-none");
+      document.getElementById("logout-btn").classList.remove("d-none");
+    }
+
+    // При старті пробуємо завантажити агентів
+    loadAgents();
+  </script>
+</body>
+</html>

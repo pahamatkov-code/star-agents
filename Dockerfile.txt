@@ -1,0 +1,18 @@
+# Використовуємо офіційний Python образ
+FROM python:3.11-slim
+
+# Робоча директорія всередині контейнера
+WORKDIR /app
+
+# Скопіювати залежності
+COPY requirements.txt .
+
+# Встановити залежності
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Скопіювати весь код
+COPY . .
+
+# Запуск FastAPI через Uvicorn
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+

@@ -1,0 +1,11 @@
+services:
+  support-agent:
+    build: .
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    environment:
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - DEBUG=True
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+version: '3.9'
+
+services:
+  support-agent:
+    build: .
+    ports:
+      - "8001:8001"
+    volumes:
+      - .:/app
+    environment:
+      - ANTHROPIC_API_KEY=your_claude_api_key_here   # ← заміни на свій ключ
+      - DEBUG=True
+    restart: unless-stopped

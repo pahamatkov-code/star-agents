@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <title>Agents - Star Agents</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="/">⭐ Star Agents</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+              data-bs-target="#navbarNav" aria-controls="navbarNav" 
+              aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="/agents">Агенти</a></li>
+          <li class="nav-item"><a class="nav-link" href="/purchases">Мої покупки</a></li>
+          <li class="nav-item"><a class="nav-link" href="/">Вийти</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">🌟 Наші агенти 🌟</h2>
+    <div id="agentsList" class="row g-4"></div>
+  </div>
+
+  <script>
+    async function loadAgents() {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("❌ Ви не авторизовані. Спочатку увійдіть.");
+        window.location.href = "/";
+        return;
+      }
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/agents", {
+          method: "GET",
+          headers: { "Authorization": `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const agents = await response.json();
+          renderAgents(agents);
+        } else {
+          alert("⚠️ Помилка отримання агентів");
+        }
+      } catch (err) {
+        alert("⚠️ Помилка з'єднання з сервером");
+      }
+    }
+
+    function renderAgents(agents) {
+      const container = document.getElementById("agentsList");
+      container.innerHTML = "";
+
+      if (agents.length === 0) {
+        container.innerHTML = "<p class='text-center'>Немає доступних агентів</p>";
+        return;
+      }
+
+      agents.forEach(agent => {
+        const card = `
+          <div class="col-md-4">
+            <div class="card shadow h-100">
+              <div class="card-body">
+                <h5 class="card-title">${agent.name}</h5>
+                <p class="card-text">${agent.description || "Без опису"}</p>
+                <p><strong>Статус:</strong> ${agent.is_active ? "Активний ✅" : "Неактивний ❌"}</p>
+                <button class="btn btn-success w-100" onclick="buyAgent(${agent.id})">Купити</button>
+              </div>
+            </div>
+          </div>
+        `;
+        container.insertAdjacentHTML("beforeend", card);
+      });
+    }
+
+    async function buyAgent(agentId) {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await fetch("http://127.0.0.1:8000/purchases/", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ agent_id: agentId })
+        });
+
+        if (response.ok) {
+          alert("✅ Агент успішно куплений!");
+        } else {
+          alert("❌ Не вдалося купити агента");
+        }
+      } catch (err) {
+        alert("⚠️ Помилка з'єднання з сервером");
+      }
+    }
+
+    // Завантажуємо агентів при відкритті сторінки
+    loadAgents();
+  </script>
+</body>
+</html>
