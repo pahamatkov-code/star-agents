@@ -1,12 +1,13 @@
 <!DOCTYPE html>
-<html lang="uk" class="dark">
+<html lang="uk">
 <head>
     <meta charset="UTF-8" />
-    <title>E-commerce Support Chat</title>
+    <title>Star Agents – E-commerce Support Chat</title>
 
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = { darkMode: 'class' }
+        tailwind.config = { darkMode: "class" }
     </script>
 
     <style>
@@ -17,39 +18,92 @@
             animation: fadeIn 0.35s ease forwards;
         }
         @keyframes fadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* === Typing indicator fade-in === */
+        /* === Typing indicator fade === */
         .typing-fade {
             opacity: 0;
             transform: translateY(6px);
             animation: typingFadeIn 0.25s ease forwards;
         }
         @keyframes typingFadeIn {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            to { opacity: 1; transform: translateY(0); }
         }
-
-        /* === Typing indicator fade-out === */
         .typing-hide {
             opacity: 1;
             transform: translateY(0);
             animation: typingFadeOut 0.25s ease forwards;
         }
         @keyframes typingFadeOut {
-            to {
-                opacity: 0;
-                transform: translateY(6px);
-            }
+            to { opacity: 0; transform: translateY(6px); }
         }
 
-        /* === Floating widget button === */
+        /* === LOGO ANIMATIONS === */
+
+        /* Slow rotation */
+        @keyframes spinSlow {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Soft pulse */
+        @keyframes pulseSoft {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+
+        /* AI thinking micro‑animation */
+        @keyframes aiThinking {
+            0% { filter: brightness(1); }
+            50% { filter: brightness(1.35); }
+            100% { filter: brightness(1); }
+        }
+
+        /* Glow effect */
+        .logo-glow {
+            filter: drop-shadow(0 0 6px rgba(59,130,246,0.6));
+        }
+        .dark .logo-glow {
+            filter: drop-shadow(0 0 12px rgba(96,165,250,0.9));
+        }
+
+        /* Hover spin */
+        .logo-hover:hover {
+            transform: rotate(20deg) scale(1.1);
+            transition: transform 0.4s ease;
+        }
+
+        /* === HEADER GLOW BORDER === */
+        .header-glow {
+            box-shadow: 0 0 12px rgba(59,130,246,0.4);
+        }
+        .dark .header-glow {
+            box-shadow: 0 0 18px rgba(96,165,250,0.6);
+        }
+
+        /* === CHAT OPEN ANIMATION === */
+        #chat-container {
+            position: fixed;
+            bottom: 110px;
+            right: 24px;
+            width: 380px;
+            height: 520px;
+            border-radius: 20px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            overflow: hidden;
+            transform: translateY(40px) scale(0.9);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s ease, opacity 0.35s ease;
+        }
+        #chat-container.open {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* === WIDGET BUTTON ANIMATION === */
         #chat-widget-btn {
             position: fixed;
             bottom: 24px;
@@ -65,76 +119,89 @@
             justify-content: center;
             cursor: pointer;
             box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-            transition: transform 0.25s ease, opacity 0.25s ease;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
         #chat-widget-btn:hover {
-            transform: scale(1.08);
-        }
-
-        /* === Floating chat window === */
-        #chat-container {
-            position: fixed;
-            bottom: 110px;
-            right: 24px;
-            width: 380px;
-            height: 520px;
-            background: #1f2937;
-            border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            overflow: hidden;
-            transform: scale(0.8);
-            opacity: 0;
-            pointer-events: none;
-            transition: transform 0.25s ease, opacity 0.25s ease;
-        }
-        #chat-container.open {
-            transform: scale(1);
-            opacity: 1;
-            pointer-events: auto;
+            transform: scale(1.15);
+            box-shadow: 0 0 14px rgba(59,130,246,0.7);
         }
     </style>
 </head>
 
-<body class="bg-gray-900 text-gray-100">
+<body class="bg-gray-100 text-gray-900 dark:bg-gray-900 dark:text-gray-100">
 
 <!-- Floating Chat Button -->
 <div id="chat-widget-btn">💬</div>
 
 <!-- Floating Chat Window -->
-<div id="chat-container" class="dark">
+<div id="chat-container" class="bg-white dark:bg-gray-800">
     <div class="w-full h-full flex flex-col">
 
         <!-- Header -->
-        <div class="px-6 py-4 border-b border-gray-700 flex items-center justify-between">
-            <div>
-                <h1 class="text-xl font-semibold">E-commerce Support Agent</h1>
-                <p class="text-sm text-gray-400">Питайте про замовлення, доставку, оплату…</p>
+        <div class="px-6 py-4 border-b header-glow
+                    border-gray-300 bg-gray-200 text-gray-900
+                    dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100
+                    flex items-center justify-between">
+
+            <!-- LOGO -->
+            <div class="flex items-center gap-3 fade-in">
+
+                <svg class="w-10 h-10 text-blue-600 dark:text-blue-400 
+                            transition-colors duration-300 logo-glow logo-hover"
+                     style="animation: spinSlow 12s linear infinite,
+                                      pulseSoft 3s ease-in-out infinite,
+                                      aiThinking 2.5s ease-in-out infinite;"
+                     viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2l2.9 6.1L22 9.3l-5 4.9L18.2 22 12 18.3 5.8 22 7 14.2 2 9.3l7.1-1.2L12 2z"/>
+                </svg>
+
+                <div>
+                    <h1 class="text-xl font-semibold">Star Agents</h1>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                        AI‑Powered E‑commerce Support
+                    </p>
+                </div>
             </div>
 
+            <!-- BUTTONS -->
             <div class="flex gap-2">
                 <button id="theme-toggle"
-                    class="text-xs px-3 py-1 rounded-full bg-gray-600 hover:bg-gray-500">
+                    class="text-xs px-3 py-1 rounded-full 
+                           bg-gray-300 hover:bg-gray-400 text-gray-900
+                           dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-100">
                     Тема
                 </button>
 
                 <button id="reset-btn"
-                    class="text-xs px-3 py-1 rounded-full bg-red-500 hover:bg-red-600">
+                    class="text-xs px-3 py-1 rounded-full 
+                           bg-red-500 hover:bg-red-600 text-white">
                     Очистити
                 </button>
             </div>
         </div>
 
         <!-- Messages -->
-        <div id="chat-window" class="flex-1 overflow-y-auto px-4 py-4 space-y-4"></div>
+        <div id="chat-window"
+             class="flex-1 overflow-y-auto px-4 py-4 space-y-4 
+                    bg-gray-50 dark:bg-gray-800">
+        </div>
 
         <!-- Input -->
-        <div class="border-t border-gray-700 px-4 py-3 flex gap-2">
+        <div class="border-t 
+                    border-gray-300 bg-gray-200
+                    dark:border-gray-700 dark:bg-gray-900
+                    px-4 py-3 flex gap-2">
             <input id="message-input"
                 type="text"
                 placeholder="Напишіть повідомлення..."
-                class="flex-1 px-3 py-2 rounded-lg bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                class="flex-1 px-3 py-2 rounded-lg 
+                       bg-gray-200 border border-gray-300 text-gray-900
+                       dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100
+                       focus:outline-none focus:ring-2 focus:ring-blue-500" />
+
             <button id="send-btn"
-                class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 font-semibold">
+                class="px-4 py-2 rounded-lg 
+                       bg-blue-600 hover:bg-blue-700 text-white font-semibold">
                 ➤
             </button>
         </div>
@@ -144,22 +211,22 @@
 <script>
 const API = "http://127.0.0.1:8000";
 
-const chatWindow = document.getElementById("chat-window");
-const inputEl = document.getElementById("message-input");
-const sendBtn = document.getElementById("send-btn");
-const resetBtn = document.getElementById("reset-btn");
-const themeToggle = document.getElementById("theme-toggle");
-const widgetBtn = document.getElementById("chat-widget-btn");
-const chatContainer = document.getElementById("chat-container");
+const chatWindow   = document.getElementById("chat-window");
+const inputEl      = document.getElementById("message-input");
+const sendBtn      = document.getElementById("send-btn");
+const resetBtn     = document.getElementById("reset-btn");
+const themeToggle  = document.getElementById("theme-toggle");
+const widgetBtn    = document.getElementById("chat-widget-btn");
+const chatContainer= document.getElementById("chat-container");
 
 let typingIndicator = null;
 
-/* === Floating widget toggle === */
+/* Floating widget toggle */
 widgetBtn.addEventListener("click", () => {
     chatContainer.classList.toggle("open");
 });
 
-/* === Theme toggle === */
+/* Theme system */
 function applyTheme() {
     const theme = localStorage.getItem("theme") || "dark";
     if (theme === "dark") {
@@ -181,7 +248,7 @@ themeToggle.addEventListener("click", () => {
     }
 });
 
-/* === Typing indicator === */
+/* Typing indicator */
 function showTyping() {
     if (typingIndicator) return;
 
@@ -192,11 +259,13 @@ function showTyping() {
         <img src="https://api.dicebear.com/7.x/bottts/svg?seed=agent"
              class="w-8 h-8 rounded-full shadow" />
 
-        <div class="px-3 py-2 rounded-2xl bg-gray-700 text-gray-300 text-sm rounded-bl-sm">
+        <div class="px-3 py-2 rounded-2xl 
+                    bg-gray-300 text-gray-900 rounded-bl-sm
+                    dark:bg-gray-700 dark:text-gray-100 text-sm">
             <div class="flex gap-1">
-                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></span>
-                <span class="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-300"></span>
+                <span class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce"></span>
+                <span class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce delay-150"></span>
+                <span class="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce delay-300"></span>
             </div>
         </div>
     `;
@@ -219,7 +288,7 @@ function hideTyping() {
     }, 250);
 }
 
-/* === Append message === */
+/* Append message */
 function appendMessage(text, role) {
     const wrapper = document.createElement("div");
     wrapper.className = "flex items-end gap-2 " + (role === "user" ? "justify-end" : "justify-start");
@@ -235,8 +304,8 @@ function appendMessage(text, role) {
     bubble.className =
         "max-w-[70%] px-3 py-2 rounded-2xl text-sm leading-relaxed " +
         (role === "user"
-            ? "bg-blue-600 text-white rounded-br-sm"
-            : "bg-gray-700 text-gray-100 rounded-bl-sm");
+            ? "bg-blue-600 text-white rounded-br-sm dark:bg-blue-500"
+            : "bg-gray-300 text-gray-900 rounded-bl-sm dark:bg-gray-700 dark:text-gray-100");
 
     bubble.textContent = text;
 
@@ -252,7 +321,7 @@ function appendMessage(text, role) {
     chatWindow.scrollTo({ top: chatWindow.scrollHeight, behavior: "smooth" });
 }
 
-/* === Send message === */
+/* Send message */
 async function sendMessage() {
     const text = inputEl.value.trim();
     if (!text) return;
@@ -280,7 +349,7 @@ async function sendMessage() {
     }
 }
 
-/* === Reset dialog === */
+/* Reset dialog */
 async function resetDialog() {
     try {
         await fetch(`${API}/chat/reset`, {
@@ -304,7 +373,7 @@ inputEl.addEventListener("keydown", (e) => {
     }
 });
 
-/* === Initial greeting === */
+/* Initial greeting */
 appendMessage("Вітаю! Я ваш E-commerce Support Agent. Чим можу допомогти?", "agent");
 </script>
 

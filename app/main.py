@@ -1,11 +1,11 @@
-from app.core.config import settings
-print(">>> USING DATABASE:", settings.DATABASE_URL)
-
+# -*- coding: utf-8 -*-
 from fastapi import FastAPI, UploadFile, File
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 import shutil
+
+from app.core.config import settings
 
 # === Ініціалізація FastAPI ===
 app = FastAPI(
@@ -15,13 +15,15 @@ app = FastAPI(
     debug=settings.DEBUG,
 )
 
+print(">>> USING DATABASE:", settings.DATABASE_URL)
+
 # === STATIC FILES ===
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # === API ROUTERS ===
 from app.api.v1.auth import router as auth_router
 from app.api.v1.users import router as users_router
-from app.api.v1.agents import router as agents_router
+from app.api.v1.endpoints.agents import router as agents_router
 from app.api.v1.purchases import router as purchases_router
 from app.api.v1.balance import router as balance_router
 from app.api.v1.analytics import router as analytics_router
@@ -37,7 +39,7 @@ app.include_router(analytics_router)
 app.include_router(seed_router)
 app.include_router(chat_router)
 
-# === Jinja2 templates ===
+# === Jinja2 Templates ===
 templates = Jinja2Templates(directory="templates")
 
 # === SYSTEM ROUTES ===
@@ -46,7 +48,6 @@ def health():
     return {"status": "ok", "debug": settings.DEBUG}
 
 # === FRONTEND ROUTES ===
-
 @app.get("/", response_class=HTMLResponse)
 def landing_page():
     return FileResponse("static/login.html")

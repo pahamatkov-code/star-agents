@@ -1,7 +1,8 @@
-version: '3.9'
+version: "3.9"
 
 services:
   db:
+    container_name: star_agents_db
     image: postgres:16
     restart: unless-stopped
     env_file:
@@ -21,24 +22,33 @@ services:
       retries: 10
 
   web:
+    container_name: star_agents_web
     build: .
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
+
     env_file:
       - .env
+
     environment:
       DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: ${SECRET_KEY}
       ALGORITHM: ${ALGORITHM}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
       DEBUG: ${DEBUG}
+
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL}
+
     ports:
       - "8000:8000"
-    volumes:
-      - .:/app
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+    volumes: []
+
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 volumes:
   postgres_data:
