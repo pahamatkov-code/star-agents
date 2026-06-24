@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import HTMLResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 import shutil
 
 from app.core.config import settings
+from app.agents.registry import AGENTS_REGISTRY
 
 # === Ініціалізація FastAPI ===
 app = FastAPI(
@@ -87,3 +88,18 @@ def featured_agents():
         {"name": "Marketing Agent", "skills": "Ads, Social Media, Targeting"},
         {"name": "Analytics Agent", "skills": "Reports, BI, Forecasting"},
     ]
+
+# === Runtime agents platform (через AGENTS_REGISTRY) ===
+@app.post("/runtime/agents/{agent_name}/run")
+async def run_agent(agent_name: str, payload: dict):
+    """
+    Платформенний ендпоінт для запуску агентів.
+    Працює через AGENTS_REGISTRY і не конфліктує з існуючими v1 endpoints.
+    """
+    factory = AGENTS_REGISTRY.get(agent_name)
+    if not factory:
+        raise HTTPException(status_code=404, detail="Agent not found")
+
+    agent = factory()
+    result = await agent.run(payload)
+    return result
