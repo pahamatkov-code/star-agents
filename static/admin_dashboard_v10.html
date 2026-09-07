@@ -2,7 +2,8 @@
 <html lang="uk" class="dark">
 <head>
     <meta charset="UTF-8" />
-    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Star Agents — Admin Dashboard</title>
 
     <!-- TailwindCSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -10,371 +11,399 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+
     <script>
-        // Tailwind dark mode config
-        tailwind.config = {
-            darkMode: 'class'
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
 
     <style>
-        body {
-            transition: background-color .3s, color .3s;
+        * { box-sizing: border-box; }
+        body { 
+            transition: background-color 0.3s, color 0.3s; 
+            font-family: system-ui, -apple-system, sans-serif;
         }
+        .fade-in { animation: fadeIn 0.5s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .card-hover { transition: transform 0.2s, box-shadow 0.2s; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(0,0,0,0.1); }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 9999px; }
+        .dark ::-webkit-scrollbar-thumb { background: #475569; }
+        
+        .loader { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 
 <body class="bg-gray-100 dark:bg-gray-900 dark:text-gray-200 min-h-screen flex">
 
-<!-- SIDEBAR -->
+<!-- ============================================================
+     SIDEBAR
+     ============================================================ -->
 <aside id="sidebar"
-       class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform -translate-x-full transition-transform duration-300 z-50 md:translate-x-0 md:static md:shadow-lg p-6 space-y-6">
-
-    <h2 class="text-2xl font-bold mb-6 dark:text-white">AI Agent SaaS</h2>
-
-    <nav class="space-y-3">
-        <a href="#" class="block p-3 rounded-lg bg-blue-600 text-white font-semibold">
-            📊 Dashboard
-        </a>
-
-        <a href="#" class="block p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-            👤 Users
-        </a>
-
-        <a href="#" class="block p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-            🤖 Agents
-        </a>
-
-        <a href="#" class="block p-3 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700">
-            💳 Purchases
-        </a>
-    </nav>
-
-    <button onclick="toggleTheme()"
-            class="w-full mt-10 bg-gray-200 dark:bg-gray-700 p-3 rounded-lg">
-        🌙 Перемкнути тему
-    </button>
-
-    <button onclick="logout()"
-            class="w-full bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg mt-4">
-        Вийти
-    </button>
+       class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-xl transform -translate-x-full transition-transform duration-300 z-50 md:translate-x-0 md:static md:shadow-lg p-6 flex flex-col justify-between">
+    <div class="space-y-6">
+        <h2 class="text-2xl font-bold dark:text-white flex items-center gap-2"><span>🤖</span> Star Agents</h2>
+        <nav class="space-y-2">
+            <a href="#" class="flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white font-semibold shadow-sm transition-colors">
+                <i class="fas fa-chart-pie w-5 text-center"></i> Dashboard
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-users w-5 text-center"></i> Users
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-robot w-5 text-center"></i> Agents
+            </a>
+            <a href="#" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                <i class="fas fa-shopping-cart w-5 text-center"></i> Purchases
+            </a>
+        </nav>
+    </div>
+    <div class="space-y-3">
+        <button onclick="toggleTheme()" class="w-full flex items-center justify-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 p-3 rounded-lg transition-colors text-sm font-medium">
+            <i class="fas fa-moon"></i> Перемкнути тему
+        </button>
+        <button onclick="logout()" class="w-full flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white p-3 rounded-lg transition-colors font-medium">
+            <i class="fas fa-sign-out-alt"></i> Вийти
+        </button>
+    </div>
 </aside>
-<div id="sidebar-backdrop"
-     class="fixed inset-0 bg-black bg-opacity-40 hidden md:hidden z-40 transition-opacity duration-300">
-</div>
 
-<!-- MAIN CONTENT -->
-<div class="flex-1">
-
-    <!-- TOP BAR -->
+<!-- ============================================================
+     MAIN CONTENT
+     ============================================================ -->
+<div class="flex-1 flex flex-col min-w-0">
     <header class="bg-white dark:bg-gray-800 shadow p-4 flex justify-between items-center md:hidden">
-        <button onclick="toggleSidebar()" class="text-2xl md:hidden">☰</button>
-        <button onclick="toggleTheme()" class="text-xl">🌙</button>
+        <button onclick="toggleSidebar()" class="text-2xl p-1">☰</button>
+        <span class="font-bold">Star Agents</span>
+        <button onclick="toggleTheme()" class="text-xl p-1">🌙</button>
     </header>
 
-    <!-- LOGIN BOX -->
-    <div id="login-box" class="max-w-md mx-auto mt-20 bg-white dark:bg-gray-800 p-8 rounded-xl shadow">
-        <h2 class="text-2xl font-bold mb-4">Вхід</h2>
+    <main class="flex-1 p-4 md:p-8">
 
-        <input id="email" type="text" placeholder="Email" value="admin@example.com"
-               class="w-full p-3 border rounded mb-3 dark:bg-gray-700 dark:border-gray-600">
-
-        <input id="password" type="password" placeholder="Пароль" value="admin123"
-               class="w-full p-3 border rounded mb-3 dark:bg-gray-700 dark:border-gray-600">
-
-        <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white p-3 rounded">
-            Увійти
-        </button>
-
-        <p id="login-status" class="text-red-500 mt-3"></p>
-    </div>
-
-    <!-- DASHBOARD -->
-    <div id="dashboard" class="hidden p-6 space-y-8">
-
-        <!-- KPI CARDS -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-gray-500 dark:text-gray-400">Total Purchases</h3>
-                <p id="kpi_total_purchases" class="text-3xl font-bold">0</p>
+        <!-- ============================================================
+             LOGIN BOX
+             ============================================================ -->
+        <div id="login-box" class="max-w-md mx-auto mt-16 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
+            <h2 class="text-2xl font-bold mb-6 text-center">Вхід в панель</h2>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium mb-1">Email / Логін</label>
+                    <input id="email" type="text" placeholder="admin@example.com" value="admin@example.com"
+                           class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Пароль</label>
+                    <input id="password" type="password" placeholder="••••••••" value="admin123"
+                           class="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 outline-none transition-shadow">
+                </div>
+                <button onclick="login()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium p-3 rounded-lg transition-colors shadow flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i> Увійти
+                </button>
+                <p id="login-status" class="text-red-500 text-sm text-center font-medium"></p>
             </div>
-
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-gray-500 dark:text-gray-400">Total Revenue</h3>
-                <p id="kpi_total_revenue" class="text-3xl font-bold">0</p>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-gray-500 dark:text-gray-400">Unique Users</h3>
-                <p id="kpi_unique_users" class="text-3xl font-bold">0</p>
-            </div>
-
         </div>
 
-        <!-- SECOND ROW KPI -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- ============================================================
+             DASHBOARD
+             ============================================================ -->
+        <div id="dashboard" class="hidden space-y-8 max-w-7xl mx-auto">
 
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-gray-500 dark:text-gray-400">Total Topups</h3>
-                <p id="kpi_total_topups" class="text-3xl font-bold">0</p>
+            <!-- KPI CARDS -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 md:gap-6">
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700 card-hover fade-in">
+                    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400"><i class="fas fa-envelope text-blue-500 text-lg"></i><h3 class="text-sm font-medium">Запити</h3></div>
+                    <p id="kpi_requests" class="text-2xl md:text-3xl font-bold mt-2">0</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700 card-hover fade-in">
+                    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400"><i class="fas fa-clock text-green-500 text-lg"></i><h3 class="text-sm font-medium">Сер. час</h3></div>
+                    <p id="kpi_duration" class="text-2xl md:text-3xl font-bold mt-2">0.00с</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700 card-hover fade-in">
+                    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400"><i class="fas fa-exclamation-triangle text-red-500 text-lg"></i><h3 class="text-sm font-medium">Помилки</h3></div>
+                    <p id="kpi_errors" class="text-2xl md:text-3xl font-bold mt-2 text-red-500">0</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700 card-hover fade-in">
+                    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400"><i class="fas fa-users text-purple-500 text-lg"></i><h3 class="text-sm font-medium">Користувачі</h3></div>
+                    <p id="kpi_users" class="text-2xl md:text-3xl font-bold mt-2">0</p>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700 card-hover fade-in">
+                    <div class="flex items-center gap-3 text-gray-500 dark:text-gray-400"><i class="fas fa-dollar-sign text-emerald-500 text-lg"></i><h3 class="text-sm font-medium">Виручка</h3></div>
+                    <p id="kpi_revenue" class="text-2xl md:text-3xl font-bold mt-2">0 ₴</p>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-gray-500 dark:text-gray-400">Total Spent</h3>
-                <p id="kpi_total_spent" class="text-3xl font-bold">0</p>
+            <!-- CHARTS -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fas fa-chart-line mr-2 text-blue-500"></i>Динаміка запитів</h3>
+                    <div class="relative h-56 md:h-64"><canvas id="chart_timeline"></canvas></div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fas fa-chart-pie mr-2 text-purple-500"></i>Розподіл намірів</h3>
+                    <div class="relative h-56 md:h-64 flex justify-center"><canvas id="chart_intents"></canvas></div>
+                </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-gray-500 dark:text-gray-400">Net Flow</h3>
-                <p id="kpi_net_flow" class="text-3xl font-bold">0</p>
+            <!-- TABLES & LIVE FEED -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fas fa-trophy mr-2 text-yellow-500"></i>Top Agents</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="border-b dark:border-gray-700 text-xs md:text-sm text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                    <th class="pb-3 px-2 font-medium">Agent</th>
+                                    <th class="pb-3 px-2 font-medium text-center">Count</th>
+                                    <th class="pb-3 px-2 font-medium text-right">Revenue</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table_top_agents" class="divide-y dark:divide-gray-700 text-sm"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 p-4 md:p-6 rounded-xl shadow border border-gray-100 dark:border-gray-700">
+                    <h3 class="text-lg font-semibold mb-4"><i class="fas fa-bolt mr-2 text-orange-500"></i>Live Feed</h3>
+                    <div id="live_feed" class="space-y-2 max-h-64 overflow-y-auto text-sm pr-1"></div>
+                </div>
             </div>
-
+            <div id="loading-indicator" class="text-center text-gray-400 text-sm hidden"><i class="fas fa-spinner fa-spin mr-2"></i> Оновлення...</div>
         </div>
-
-        <!-- CHARTS -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-lg font-semibold mb-4">Purchases by Day</h3>
-                <canvas id="chart_purchases"></canvas>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-lg font-semibold mb-4">Topups by Day</h3>
-                <canvas id="chart_topups"></canvas>
-            </div>
-
-        </div>
-
-        <!-- TABLES -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-lg font-semibold mb-4">Top Agents</h3>
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="border-b dark:border-gray-700">
-                            <th class="py-2">Agent</th>
-                            <th class="py-2">Count</th>
-                            <th class="py-2">Revenue</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table_top_agents"></tbody>
-                </table>
-            </div>
-
-            <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow">
-                <h3 class="text-lg font-semibold mb-4">Top Users</h3>
-                <table class="w-full text-left">
-                    <thead>
-                        <tr class="border-b dark:border-gray-700">
-                            <th class="py-2">User</th>
-                            <th class="py-2">Count</th>
-                            <th class="py-2">Spent</th>
-                        </tr>
-                    </thead>
-                    <tbody id="table_top_users"></tbody>
-                </table>
-            </div>
-
-        </div>
-
-    </div>
+    </main>
 </div>
 
+<!-- ============================================================
+     JAVASCRIPT
+     ============================================================ -->
 <script>
-const API = "http://127.0.0.1:8000";
+const API_BASE = "";
+let mainChart = null, intentChart = null, refreshInterval = null, isRefreshing = false;
 
-/* ---------------- THEME ---------------- */
 function toggleTheme() {
     document.documentElement.classList.toggle("dark");
-    localStorage.setItem(
-        "theme",
-        document.documentElement.classList.contains("dark") ? "dark" : "light"
-    );
+    localStorage.setItem("theme", document.documentElement.classList.contains("dark") ? "dark" : "light");
+}
+if (localStorage.getItem("theme") === "light") document.documentElement.classList.remove("dark");
+
+document.addEventListener("DOMContentLoaded", () => {
+    if (localStorage.getItem("access_token")) showDashboard();
+});
+
+function authHeaders() {
+    const token = localStorage.getItem("access_token");
+    return { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" };
 }
 
-if (localStorage.getItem("theme") === "light") {
-    document.documentElement.classList.remove("dark");
-}
-/* ---------------- LOGIN ---------------- */
 async function login() {
-    const emailEl = document.getElementById("email");
-    const passwordEl = document.getElementById("password");
-    const statusEl = document.getElementById("login-status");
-    const buttonEl = document.querySelector("#login-box button");
-
-    const email = emailEl.value.trim();
-    const password = passwordEl.value;
-
+    const email = document.getElementById("email").value.trim(), password = document.getElementById("password").value;
+    const statusEl = document.getElementById("login-status"), btn = document.querySelector("#login-box button");
     statusEl.textContent = "";
-
-    if (!email || !password) {
-        statusEl.textContent = "Введіть email і пароль";
-        return;
-    }
-
-    buttonEl.disabled = true;
-    const oldText = buttonEl.textContent;
-    buttonEl.textContent = "Входимо...";
-
+    if (!email || !password) { statusEl.textContent = "Введіть email і пароль"; return; }
+    btn.disabled = true; btn.innerHTML = `<span class="loader"></span> Входимо...`;
     try {
-        const res = await fetch(`${API}/auth/login`, {
+        const res = await fetch(`${API_BASE}/auth/login`, {
             method: "POST",
             headers: {"Content-Type": "application/x-www-form-urlencoded"},
-            body: new URLSearchParams({
-                grant_type: "password",
-                username: email,
-                password: password
-            })
+            body: new URLSearchParams({ grant_type: "password", username: email, password: password })
         });
+        if (!res.ok) { statusEl.textContent = "Невірний логін або пароль"; return; }
+        const data = await res.json();
+        if (data.access_token) { localStorage.setItem("access_token", data.access_token); showDashboard(); }
+        else { statusEl.textContent = "Помилка авторизації"; }
+    } catch (e) { statusEl.textContent = "Помилка з'єднання з сервером"; console.error("Login error:", e); }
+    finally { btn.disabled = false; btn.innerHTML = `<i class="fas fa-sign-in-alt"></i> Увійти`; }
+}
 
-        if (!res.ok) {
-            statusEl.textContent = "Невірний логін або пароль";
-            return;
-        }
+function logout() { localStorage.removeItem("access_token"); if (refreshInterval) clearInterval(refreshInterval); location.reload(); }
 
+function showDashboard() {
+    document.getElementById("login-box").classList.add("hidden");
+    document.getElementById("dashboard").classList.remove("hidden");
+    loadDashboard();
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => { if (localStorage.getItem("access_token")) loadDashboard(); }, 5000);
+}
+
+async function loadDashboard() {
+    if (isRefreshing) return; isRefreshing = true;
+    const indicator = document.getElementById("loading-indicator");
+    if (indicator) indicator.classList.remove("hidden");
+    try {
+        let res = await fetch(`${API_BASE}/api/dashboard`, { headers: authHeaders() });
+        if (!res.ok) res = await fetch(`${API_BASE}/api/analytics/dashboard`, { headers: authHeaders() });
+        if (res.status === 401 || res.status === 403) { logout(); return; }
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
         const data = await res.json();
 
-        if (data.access_token) {
-            localStorage.setItem("access_token", data.access_token);
-
-            document.getElementById("login-box").classList.add("hidden");
-            document.getElementById("dashboard").classList.remove("hidden");
-
-            await loadDashboard();
-        } else {
-            statusEl.textContent = "Помилка авторизації (немає токена)";
+        // 🟢 ФІНАЛЬНЕ ВИПРАВЛЕННЯ: тепер файл лежить у корені проєкту
+        try {
+            const response = await fetch('/timeline_data.json');
+            if (response.ok) {
+                const timelineData = await response.json();
+                data.timeline = timelineData;
+                console.log("✅ Графік завантажено з timeline_data.json");
+            }
+        } catch (err) {
+            console.warn("⚠️ Не вдалося завантажити timeline_data.json, використовуємо дані з API");
         }
-    } catch (e) {
-        console.error("Login error:", e);
-        statusEl.textContent = "Помилка з'єднання з сервером";
-    } finally {
-        buttonEl.disabled = false;
-        buttonEl.textContent = oldText;
-    }
-}
-/* ---------------- LOGOUT ---------------- */
-function logout() {
-    localStorage.removeItem("access_token");
-    location.reload();
-}
 
-/* ---------------- AUTH HEADER ---------------- */
-function authHeaders() {
-    return {
-        "Authorization": "Bearer " + localStorage.getItem("access_token")
-    };
+        document.getElementById("kpi_requests").textContent = data.requests ?? 0;
+        document.getElementById("kpi_duration").textContent = (data.avg_time ?? 0).toFixed(2);
+        document.getElementById("kpi_errors").textContent = data.errors ?? 0;
+        document.getElementById("kpi_users").textContent = data.users ?? 0;
+        document.getElementById("kpi_revenue").textContent = (data.revenue ?? 0).toLocaleString('uk-UA') + ' ₴';
+
+        renderTables(data);
+        renderCharts(data);
+        renderLiveFeed(data.recent_messages || data.top_users || []);
+
+    } catch (err) { console.error("Dashboard load error:", err);
+        const feed = document.getElementById("live_feed");
+        if (feed) feed.innerHTML = `<p class="text-red-500 text-sm">❌ Помилка завантаження: ${err.message}</p>`;
+    } finally { isRefreshing = false; if (indicator) indicator.classList.add("hidden"); }
 }
 
-/* ---------------- DASHBOARD LOAD ---------------- */
-async function loadDashboard() {
-    const res = await fetch(`${API}/analytics/dashboard`, {
-        headers: authHeaders()
-    });
-
-    const data = await res.json();
-
-    // KPI
-    document.getElementById("kpi_total_purchases").textContent =
-        data.purchases.total_purchases;
-    document.getElementById("kpi_total_revenue").textContent =
-        data.purchases.total_revenue;
-    document.getElementById("kpi_unique_users").textContent =
-        data.purchases.unique_users;
-
-    document.getElementById("kpi_total_topups").textContent =
-        data.balance.total_topups;
-    document.getElementById("kpi_total_spent").textContent =
-        data.balance.total_spent;
-    document.getElementById("kpi_net_flow").textContent =
-        data.balance.net_flow;
-
-    renderTables(data);
-    renderCharts(data);
-}
-
-/* ---------------- TABLES ---------------- */
 function renderTables(data) {
-    document.getElementById("table_top_agents").innerHTML =
-        data.purchases.top_agents
-            .map(a => `
-                <tr class="border-b dark:border-gray-700">
-                    <td class="py-2">${a.agent}</td>
-                    <td class="py-2">${a.count}</td>
-                    <td class="py-2">${a.revenue}</td>
-                </tr>
-            `)
-            .join("");
-
-    document.getElementById("table_top_users").innerHTML =
-        data.purchases.top_users
-            .map(u => `
-                <tr class="border-b dark:border-gray-700">
-                    <td class="py-2">${u.user}</td>
-                    <td class="py-2">${u.count}</td>
-                    <td class="py-2">${u.spent}</td>
-                </tr>
-            `)
-            .join("");
+    const agentsTable = document.getElementById("table_top_agents");
+    const agents = data.top_agents || [];
+    agentsTable.innerHTML = agents.length ? agents.map((a, i) => `
+        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${i === 0 ? 'bg-yellow-50 dark:bg-yellow-900/10' : ''}">
+            <td class="py-3 px-2 font-medium flex items-center gap-2">${i === 0 ? '🏆' : ''} ${escapeHtml(a.agent)}</td>
+            <td class="py-3 px-2 text-center text-gray-600 dark:text-gray-300">${a.count}</td>
+            <td class="py-3 px-2 text-right font-semibold text-emerald-600 dark:text-emerald-400">${typeof a.revenue === 'number' ? a.revenue.toLocaleString('uk-UA') : a.revenue} ₴</td>
+        </tr>
+    `).join("") : `<tr><td colspan="3" class="py-4 text-center text-gray-500">Немає даних</td></tr>`;
 }
 
-/* ---------------- CHARTS ---------------- */
 function renderCharts(data) {
-    const purchases = data.purchases.purchases_by_day;
-    const topups = data.balance.topups_by_day;
+    // 1. Timeline Chart (СТОВПЧИКОВИЙ ГРАФІК З НЕОНОВИМ ЕФЕКТОМ)
+    const ctxMain = document.getElementById("chart_timeline").getContext("2d");
+    if (mainChart) mainChart.destroy();
 
-    new Chart(document.getElementById("chart_purchases"), {
-        type: "line",
-        data: {
-            labels: purchases.map(p => p.day),
-            datasets: [{
-                label: "Purchases",
-                data: purchases.map(p => p.count),
-                borderColor: "#3b82f6",
-                backgroundColor: "rgba(59,130,246,0.3)"
-            }]
-        }
-    });
+    const timeline = data.timeline || [];
+    const fullLabels = [], fullValues = [];
 
-    new Chart(document.getElementById("chart_topups"), {
-        type: "line",
-        data: {
-            labels: topups.map(t => t.day),
-            datasets: [{
-                label: "Topups",
-                data: topups.map(t => t.amount),
-                borderColor: "#10b981",
-                backgroundColor: "rgba(16,185,129,0.3)"
-            }]
-        }
-    });
-}
-
-/* ---------------- SIDEBAR ---------------- */
-function toggleSidebar() {
-    const sidebar = document.getElementById("sidebar");
-    const backdrop = document.getElementById("sidebar-backdrop");
-
-    const isOpen = !sidebar.classList.contains("-translate-x-full");
-
-    if (isOpen) {
-        sidebar.classList.add("-translate-x-full");
-        backdrop.classList.add("hidden");
-        backdrop.classList.remove("opacity-100");
-    } else {
-        sidebar.classList.remove("-translate-x-full");
-        backdrop.classList.remove("hidden");
-
-        setTimeout(() => {
-            backdrop.classList.add("opacity-100");
-        }, 10);
+    for (let i = 23; i >= 0; i--) {
+        const hour = `${String(i).padStart(2, '0')}:00`;
+        const found = timeline.find(t => String(t.hour).trim() === hour);
+        fullLabels.push(hour);
+        fullValues.push(found ? found.count : 0);
     }
+
+    const maxVal = Math.max(...fullValues, 1);
+
+    mainChart = new Chart(ctxMain, {
+        type: "bar",
+        data: { 
+            labels: fullLabels.length ? fullLabels : ["Немає даних"], 
+            datasets: [{ 
+                label: "Запити", 
+                data: fullValues.length ? fullValues : [0], 
+                backgroundColor: "rgba(59, 130, 246, 0.7)",
+                borderColor: "#3B82F6",
+                borderWidth: 2,
+                borderRadius: 6,
+                borderSkipped: false,
+                hoverBackgroundColor: "#2563EB",
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { display: false }, 
+                tooltip: { 
+                    callbacks: { 
+                        label: (ctx) => `${ctx.parsed.y} запитів` 
+                    } 
+                } 
+            }, 
+            scales: { 
+                y: { 
+                    beginAtZero: true, 
+                    max: Math.max(maxVal + 1, 6),
+                    ticks: { 
+                        stepSize: 1,
+                        precision: 0,
+                        maxTicksLimit: 10
+                    } 
+                }, 
+                x: { 
+                    ticks: { maxTicksLimit: 12 } 
+                } 
+            } 
+        }
+    });
+
+    // 2. Intents Chart (Doughnut)
+    const ctxIntent = document.getElementById("chart_intents").getContext("2d");
+    if (intentChart) intentChart.destroy();
+    
+    const intents = data.intents_distribution || data.intents || {};
+    const labels_int = Object.keys(intents);
+    const values_int = Object.values(intents);
+    
+    const colorsObj = data.intents_colors || {};
+    let backgroundColors = [];
+    
+    if (Object.keys(colorsObj).length > 0) {
+        backgroundColors = labels_int.map(label => colorsObj[label]?.color || "#9CA3AF");
+    } else {
+        const defaultColors = ["#EC4899", "#8B5CF6", "#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#6366F1", "#14B8A6"];
+        backgroundColors = labels_int.length ? defaultColors.slice(0, labels_int.length) : ["#9CA3AF"];
+    }
+
+    intentChart = new Chart(ctxIntent, {
+        type: "doughnut",
+        data: { 
+            labels: labels_int.length ? labels_int : ["Немає даних"], 
+            datasets: [{ 
+                data: labels_int.length ? values_int : [1], 
+                backgroundColor: backgroundColors, 
+                borderWidth: 2, 
+                borderColor: document.documentElement.classList.contains("dark") ? "#1F2937" : "#FFFFFF", 
+            }] 
+        },
+        options: { 
+            responsive: true, 
+            maintainAspectRatio: false, 
+            plugins: { 
+                legend: { 
+                    position: "bottom", 
+                    labels: { 
+                        boxWidth: 12, 
+                        padding: 12, 
+                        color: document.documentElement.classList.contains("dark") ? "#E5E7EB" : "#1F2937" 
+                    } 
+                } 
+            } 
+        }
+    });
 }
 
-document.getElementById("sidebar-backdrop").addEventListener("click", () => {
-    toggleSidebar();
-});
+function renderLiveFeed(messages) {
+    const container = document.getElementById("live_feed");
+    if (!messages || !messages.length) {
+        container.innerHTML = `<p class="text-gray-500 text-sm text-center py-4"><i class="fas fa-inbox mr-2"></i>Немає активності</p>`;
+        return;
+    }
+    container.innerHTML = messages.slice(0, 10).map(msg => {
+        const text = msg.content || msg.message || msg.text || msg.body || msg.user || "Нове повідомлення";
+        const time = msg.time || msg.created_at || "";
+        return `
+        <div class="flex justify-between items-center border-b border-gray-100 dark:border-gray-700 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/30 px-2 rounded-lg transition-colors">
+            <span class="truncate max-w-[160px] text-sm">${escapeHtml(text)}</span>
+            <span class="text-xs text-gray-400 whitespace-nowrap ml-2">${time}</span>
+        </div>
+    `}).join("");
+}
+
+function toggleSidebar() { document.getElementById("sidebar").classList.toggle("-translate-x-full"); }
+function escapeHtml(str) { if (!str) return ''; return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;"); }
 </script>
+</body>
+</html>

@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="uk" class="dark">
+<head>
+    <meta charset="UTF-8" />
+    <title>Star Agents — Premium Dashboard</title>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' }
+    </script>
+    <style>
+        * { font-family: 'Inter', 'Segoe UI', sans-serif; }
+
+        :root {
+            --bg-primary: #0B1A33;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --text-primary: #FFFFFF;
+            --text-secondary: #9BB0C8;
+            --accent: #F5A623;
+            --accent-glow: rgba(245, 166, 35, 0.25);
+            --border-glass: rgba(255, 255, 255, 0.07);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --status-online: #4ADE80;
+            --status-offline: #F87171;
+            --transition-speed: 0.3s;
+            --hover-row: rgba(245, 166, 35, 0.08);
+        }
+
+        html.light {
+            --bg-primary: #F0F2F5;
+            --bg-card: rgba(255, 255, 255, 0.6);
+            --text-primary: #1A1A2E;
+            --text-secondary: #555;
+            --border-glass: rgba(0, 0, 0, 0.08);
+            --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.08);
+            --hover-row: rgba(245, 166, 35, 0.12);
+        }
+
+        html.light .sidebar {
+            background: rgba(255, 255, 255, 0.85);
+            border-right: 1px solid var(--border-glass);
+        }
+        html.light .sidebar a {
+            color: #1A1A2E;
+        }
+        html.light .sidebar a:hover {
+            background: rgba(245, 166, 35, 0.15);
+        }
+        html.light .sidebar .active {
+            background: rgba(245, 166, 35, 0.15);
+            border-left: 3px solid var(--accent);
+        }
+        html.light .stat-card .number {
+            color: #1A1A2E;
+        }
+        html.light .chart-box h3,
+        html.light .table-wrap h3 {
+            color: #1A1A2E;
+        }
+        html.light .table-wrap td {
+            color: #1A1A2E;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        html.light .login-box {
+            background: var(--bg-card);
+        }
+        html.light .login-box input {
+            background: rgba(255, 255, 255, 0.8);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1A1A2E;
+        }
+        html.light .login-box input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.2);
+        }
+        html.light .btn-outline {
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #1A1A2E;
+        }
+        html.light .btn-outline:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        html.light .footer {
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            color: #555;
+        }
+
+        body,
+        .sidebar,
+        .stat-card,
+        .chart-box,
+        .table-wrap,
+        .login-box,
+        .btn-outline,
+        .footer {
+            transition: background var(--transition-speed) ease,
+                color var(--transition-speed) ease,
+                border-color var(--transition-speed) ease,
+                box-shadow var(--transition-speed) ease;
+        }
+
+        body {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            background-image: radial-gradient(circle at 10% 20%, rgba(245, 166, 35, 0.04) 0%, transparent 50%),
+                radial-gradient(circle at 90% 80%, rgba(74, 144, 217, 0.04) 0%, transparent 50%);
+        }
+
+        .logo-glow {
+            box-shadow: 0 0 12px rgba(245, 166, 35, 0.6);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px;
+        }
+
+        .logo-glow:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(245, 166, 35, 0.8);
+        }
+
+        .sidebar {
+            background: rgba(11, 26, 51, 0.85);
+            backdrop-filter: blur(16px);
+            border-right: 1px solid var(--border-glass);
+        }
+
+        .sidebar a {
+            transition: all 0.25s ease;
+            border-radius: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.75rem 1rem;
+        }
+
+        .sidebar a svg {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+            opacity: 0.6;
+            transition: opacity 0.2s ease;
+        }
+
+        .sidebar a:hover svg {
+            opacity: 1;
+        }
+        .sidebar a:hover {
+            background: rgba(245, 166, 35, 0.12);
+            transform: translateX(4px);
+            color: var(--text-primary);
+        }
+        .sidebar .active {
+            background: linear-gradient(135deg, rgba(245, 166, 35, 0.2), rgba(245, 166, 35, 0.05));
+            border-left: 3px solid var(--accent);
+            color: var(--text-primary);
+        }
+        .sidebar .active svg {
+            opacity: 1;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            box-shadow: var(--shadow-card);
+            padding: 1.5rem 1.5rem 1.25rem;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+            border-color: rgba(245, 166, 35, 0.2);
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            font-weight: 500;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .stat-card .number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-top: 0.2rem;
+            line-height: 1.2;
+        }
+
+        .chart-box {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            box-shadow: var(--shadow-card);
+            padding: 1.5rem 1.5rem 1rem;
+        }
+
+        .chart-box:hover {
+            border-color: rgba(245, 166, 35, 0.15);
+        }
+        .chart-box h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+            letter-spacing: 0.01em;
+        }
+
+        .table-wrap {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            box-shadow: var(--shadow-card);
+            padding: 1.25rem 1.5rem 1.5rem;
+            overflow-x: auto;
+        }
+
+        .table-wrap h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.75rem;
+        }
+
+        .table-wrap table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table-wrap th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border-glass);
+            text-align: left;
+        }
+
+        .table-wrap td {
+            padding: 0.6rem 0;
+            color: var(--text-primary);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-weight: 400;
+            transition: background 0.2s ease;
+        }
+
+        .table-wrap tr {
+            transition: background 0.2s ease;
+        }
+        .table-wrap tr:hover td {
+            background: var(--hover-row);
+        }
+        .table-wrap tr:last-child td {
+            border-bottom: none;
+        }
+
+        .login-box {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 24px;
+            box-shadow: var(--shadow-card);
+            padding: 2.5rem 2rem;
+        }
+
+        .login-box input {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 0.8rem 1rem;
+            color: var(--text-primary);
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .login-box button {
+            background: linear-gradient(135deg, var(--accent), #d48d1a);
+            color: #0B1A33;
+            font-weight: 600;
+            padding: 0.8rem;
+            border-radius: 12px;
+            width: 100%;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s ease, box-shadow 0.3s ease;
+        }
+
+        .login-box button:hover {
+            transform: scale(1.01);
+            box-shadow: 0 4px 20px var(--accent-glow);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+            border-radius: 12px;
+            padding: 0.6rem 1.2rem;
+            transition: background 0.2s ease;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #F87171;
+            border-radius: 12px;
+            padding: 0.6rem 1.2rem;
+            transition: background 0.2s ease;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+        }
+
+        .btn-danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-dot.online {
+            background: var(--status-online);
+            box-shadow: 0 0 12px rgba(74, 222, 128, 0.4);
+        }
+        .status-dot.offline {
+            background: var(--status-offline);
+            box-shadow: 0 0 12px rgba(248, 113, 113, 0.4);
+        }
+
+        .footer {
+            border-top: 1px solid var(--border-glass);
+            padding-top: 1.25rem;
+            margin-top: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+        }
+
+        .footer .version {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-glass);
+            border-radius: 16px;
+            padding: 0.75rem 1.5rem;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-card);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(245, 166, 35, 0.4);
+            border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent);
+        }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stat-card,
+        .chart-box,
+        .table-wrap {
+            animation: fadeUp 0.5s ease forwards;
+        }
+        .stat-card:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card:nth-child(2) { animation-delay: 0.10s; }
+        .stat-card:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card:nth-child(4) { animation-delay: 0.20s; }
+        .chart-box:nth-child(1) { animation-delay: 0.25s; }
+        .chart-box:nth-child(2) { animation-delay: 0.30s; }
+
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .status-dot.online {
+            animation: pulse-dot 2s infinite;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 w-64 shadow-xl transform -translate-x-full transition-transform duration-300 z-50 md:translate-x-0 md:static p-6 space-y-6">
+
+        <div class="flex items-center gap-3 mb-6">
+            <img src="/static/favicon.ico" alt="Star Agents Logo" class="h-10 w-10 rounded-md shadow-lg logo-glow" />
+            <span class="text-xl font-bold tracking-tight" style="color: var(--accent);">Star Agents</span>
+        </div>
+
+        <nav class="space-y-2 mt-2">
+            <a href="#" class="active block font-semibold">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 0 1 3 19.875v-6.75ZM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V8.625ZM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 0 1-1.125-1.125V4.125Z" /></svg>
+                📊 Dashboard
+            </a>
+            <a href="#" class="block">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" /></svg>
+                👤 Users
+            </a>
+            <a href="#" class="block">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.5 20.25l-.105.42-.42.105-.42-.105-.105-.42.105-.42.42-.105.42.105.105.42ZM22.5 16.5l-.105.42-.42.105-.42-.105-.105-.42.105-.42.42-.105.42.105.105.42Z" /></svg>
+                🤖 Agents
+            </a>
+            <a href="#" class="block">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" /></svg>
+                💳 Purchases
+            </a>
+        </nav>
+
+        <div class="absolute bottom-6 left-6 right-6 space-y-3">
+            <button onclick="toggleTheme()" class="w-full btn-outline" id="themeToggleBtn">🌙 Темна тема</button>
+            <button onclick="logout()" class="w-full btn-danger">Вийти</button>
+        </div>
+    </aside>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="flex-1 p-4 md:p-6">
+
+        <header class="flex justify-between items-center md:hidden mb-4">
+            <div class="flex items-center gap-2">
+                <img src="/static/favicon.ico" alt="Star Agents Logo" class="h-8 w-8 rounded-md shadow-md logo-glow" />
+                <span class="text-lg font-bold tracking-tight" style="color: var(--accent);">Star Agents</span>
+            </div>
+            <button onclick="toggleTheme()" class="text-xl" style="color: var(--text-primary);" id="themeToggleMobile">🌙</button>
+        </header>
+
+        <div id="login-box" class="login-box max-w-md mx-auto mt-16">
+            <h2 class="text-2xl font-bold mb-2" style="color: var(--text-primary);">Вхід</h2>
+            <p class="text-sm mb-6" style="color: var(--text-secondary);">Увійдіть у свою панель управління</p>
+            <input id="email" type="text" placeholder="Email" value="admin@example.com" class="mb-3" />
+            <input id="password" type="password" placeholder="Пароль" value="admin123" class="mb-4" />
+            <button onclick="login()">Увійти</button>
+            <p id="login-status" class="text-red-400 text-sm mt-3"></p>
+        </div>
+
+        <div id="dashboard" class="hidden space-y-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
+                <div class="stat-card"><div class="label">📩 Запити</div><div class="number" id="kpi_requests">0</div></div>
+                <div class="stat-card"><div class="label">⏱️ Сер. час (с)</div><div class="number" id="kpi_duration">0.00</div></div>
+                <div class="stat-card"><div class="label">❌ Помилки</div><div class="number" id="kpi_errors">0</div></div>
+                <div class="stat-card"><div class="label">🧑 Користувачі</div><div class="number" id="kpi_users">0</div></div>
+            </div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div class="chart-box"><h3>📈 Основні метрики</h3><canvas id="chart_main" height="220"></canvas></div>
+                <div class="chart-box"><h3>🧩 Розподіл намірів</h3><canvas id="chart_intents" height="220"></canvas></div>
+            </div>
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                <div class="table-wrap"><h3>🏆 Top Agents</h3><table><thead><tr><th>Agent</th><th>Count</th><th>Revenue</th></tr></thead><tbody id="table_top_agents"></tbody></table></div>
+                <div class="table-wrap"><h3>👤 Top Users</h3><table><thead><tr><th>User</th><th>Count</th><th>Spent</th></tr></thead><tbody id="table_top_users"></tbody></table></div>
+            </div>
+            <div class="footer">
+                <div class="flex items-center gap-4">
+                    <span class="flex items-center"><span class="status-dot" id="statusDot"></span><span id="statusText">Перевірка підключення...</span></span>
+                    <span>|</span>
+                    <span>Оновлено: <span id="lastUpdated">—</span></span>
+                </div>
+                <div><span class="version">v1.0.0</span> <span class="text-gray-500 ml-2">• Star Agents</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification">Дані оновлено ✅</div>
+
+    <script>
+        const API = "http://localhost:8000";
+        let mainChart = null,
+            intentChart = null,
+            statusInterval = null;
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            if (isDark) {
+                html.classList.remove('dark');
+                html.classList.add('light');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+            updateThemeButtons();
+        }
+
+        function updateThemeButtons() {
+            const isDark = document.documentElement.classList.contains('dark');
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.textContent = isDark ? '☀️ Світла тема' : '🌙 Темна тема';
+            const btnMobile = document.getElementById('themeToggleMobile');
+            if (btnMobile) btnMobile.textContent = isDark ? '☀️' : '🌙';
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedTheme = localStorage.getItem('theme');
+            const html = document.documentElement;
+            if (savedTheme === 'light') {
+                html.classList.remove('dark');
+                html.classList.add('light');
+            } else {
+                html.classList.remove('light');
+                html.classList.add('dark');
+            }
+            updateThemeButtons();
+        });
+
+        function showNotification(message = 'Дані оновлено ✅', duration = 2500) {
+            const el = document.getElementById('notification');
+            if (!el) return;
+            el.textContent = message;
+            el.classList.add('show');
+            clearTimeout(el._hideTimeout);
+            el._hideTimeout = setTimeout(() => { el.classList.remove('show'); }, duration);
+        }
+
+        async function checkStatus() {
+            const dot = document.getElementById("statusDot");
+            const text = document.getElementById("statusText");
+            try {
+                const res = await fetch(`${API}/health`);
+                if (res.ok) {
+                    dot.className = "status-dot online";
+                    text.textContent = "Сервер онлайн";
+                } else {
+                    dot.className = "status-dot offline";
+                    text.textContent = "Сервер недоступний";
+                }
+            } catch (e) {
+                dot.className = "status-dot offline";
+                text.textContent = "Сервер недоступний";
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const statusEl = document.getElementById("login-status");
+            const btn = document.querySelector("#login-box button");
+            statusEl.textContent = "";
+            if (!email || !password) {
+                statusEl.textContent = "Введіть email і пароль";
+                return;
+            }
+            btn.disabled = true;
+            btn.textContent = "Входимо...";
+            try {
+                const res = await fetch(`${API}/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                    body: new URLSearchParams({ grant_type: "password", username: email, password: password })
+                });
+                if (!res.ok) {
+                    statusEl.textContent = "Невірний логін або пароль";
+                    return;
+                }
+                const data = await res.json();
+                if (data.access_token) {
+                    localStorage.setItem("access_token", data.access_token);
+                    document.getElementById("login-box").classList.add("hidden");
+                    document.getElementById("dashboard").classList.remove("hidden");
+                    await loadDashboard();
+                    checkStatus();
+                    if (statusInterval) clearInterval(statusInterval);
+                    statusInterval = setInterval(checkStatus, 30000);
+                } else {
+                    statusEl.textContent = "Помилка авторизації";
+                }
+            } catch (e) {
+                statusEl.textContent = "Помилка з'єднання з сервером";
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Увійти";
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem("access_token");
+            if (statusInterval) clearInterval(statusInterval);
+            location.reload();
+        }
+
+        function authHeaders() {
+            return { "Authorization": "Bearer " + localStorage.getItem("access_token") };
+        }
+
+        async function loadDashboard() {
+            try {
+                const res = await fetch(`${API}/api/dashboard`, { headers: authHeaders() });
+                if (!res.ok) throw new Error("Failed to load");
+                const data = await res.json();
+                document.getElementById("kpi_requests").textContent = data.purchases?.total_purchases || 0;
+                document.getElementById("kpi_duration").textContent = (data.purchases?.avg_duration || 0).toFixed(2);
+                document.getElementById("kpi_errors").textContent = data.purchases?.errors_count || 0;
+                document.getElementById("kpi_users").textContent = data.purchases?.unique_users || 0;
+                renderTables(data);
+                renderCharts(data);
+                document.getElementById("lastUpdated").textContent = new Date().toLocaleTimeString();
+                showNotification('Дані оновлено ✅');
+            } catch (err) {
+                console.error("Dashboard load error:", err);
+                showNotification('Помилка завантаження даних ❌', 3000);
+            }
+        }
+
+        function renderTables(data) {
+            const agents = data.purchases?.top_agents || [];
+            document.getElementById("table_top_agents").innerHTML = agents.map(a =>
+                `<tr><td>${a.agent}</td><td>${a.count}</td><td>${a.revenue}</td></tr>`
+            ).join("");
+            const users = data.purchases?.top_users || [];
+            document.getElementById("table_top_users").innerHTML = users.map(u =>
+                `<tr><td>${u.user}</td><td>${u.count}</td><td>${u.spent}</td></tr>`
+            ).join("");
+        }
+
+        function renderCharts(data) {
+            const purchases = data.purchases || {};
+            const intents = data.intents_distribution || {};
+            const ctxMain = document.getElementById("chart_main").getContext("2d");
+            if (mainChart) mainChart.destroy();
+            mainChart = new Chart(ctxMain, {
+                type: "bar",
+                data: {
+                    labels: ["Запити", "Середній час (с)", "Помилки"],
+                    datasets: [{ label: "Метрики", data: [
+                            purchases.total_purchases || 0,
+                            purchases.avg_duration || 0,
+                            purchases.errors_count || 0
+                        ], backgroundColor: ["#F5A623", "#4A90D9", "#EF4444"], borderRadius: 8 }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' } } }
+                }
+            });
+            const ctxIntent = document.getElementById("chart_intents").getContext("2d");
+            if (intentChart) intentChart.destroy();
+            const labels = Object.keys(intents);
+            const values = Object.values(intents);
+            const colors = ["#F5A623", "#4A90D9", "#FF6384", "#36A2EB", "#FFCE56"];
+            intentChart = new Chart(ctxIntent, {
+                type: "doughnut",
+                data: {
+                    labels: labels.length ? labels : ["Немає даних"],
+                    datasets: [{
+                        data: labels.length ? values : [1],
+                        backgroundColor: labels.length ? colors.slice(0, labels.length) : ["#2D3748"]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { position: "bottom", labels: { color: "#9BB0C8" } } }
+                }
+            });
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById("sidebar");
+            const backdrop = document.getElementById("sidebar-backdrop");
+            if (sidebar.classList.contains("-translate-x-full")) {
+                sidebar.classList.remove("-translate-x-full");
+                if (backdrop) backdrop.classList.remove("hidden");
+            } else {
+                sidebar.classList.add("-translate-x-full");
+                if (backdrop) backdrop.classList.add("hidden");
+            }
+        }
+    </script>
+</body>
+</html>

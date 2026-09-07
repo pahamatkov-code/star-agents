@@ -1,54 +1,46 @@
 version: "3.9"
 
 services:
-  db:
-    container_name: star_agents_db
-    image: postgres:16
-    restart: unless-stopped
-    env_file:
-      - .env
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
   web:
-    container_name: star_agents_web
     build: .
-    restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-
-    env_file:
-      - .env
-
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      SECRET_KEY: ${SECRET_KEY}
-      ALGORITHM: ${ALGORITHM}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
-      DEBUG: ${DEBUG}
-
-      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL}
-
+    container_name: star_agents_web
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
     ports:
       - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/star_agents
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    depends_on:
+      - db
 
-    volumes: []
+  db:
+    image: postgres:16
+    container_name: star_agents_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: star_agents
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
 
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000
+  alembic:
+    build: .
+    container_name: star_agents_alembic
+    command: tail -f /dev/null
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
 
 volumes:
   postgres_data:

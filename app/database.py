@@ -1,25 +1,45 @@
+# -*- coding: utf-8 -*-
+import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-# URL для підключення до бази (SQLite для прикладу)
-SQLALCHEMY_DATABASE_URL = "sqlite:///./agents.db"
-
-# Якщо використовуєш PostgreSQL або MySQL, заміни на відповідний URL
-# SQLALCHEMY_DATABASE_URL = "postgresql://user:password@localhost/dbname"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+# Отримуємо URL зі змінних оточення, або використовуємо PostgreSQL за замовчуванням
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    "postgresql://postgres:postgres@db:5432/star_agents"
 )
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Налаштування підключення до бази даних
+engine = create_engine(
+    DATABASE_URL,
+    pool_size=10,              # Розмір пулу з'єднань
+    max_overflow=20,           # Максимум додаткових з'єднань
+    pool_pre_ping=True,        # Перевірка з'єднання перед використанням
+    pool_recycle=3600,         # Перепідключення кожну годину
+    echo=False                 # Логування SQL (False у продакшені)
+)
 
-# Використовуємо сучасний імпорт declarative_base з sqlalchemy.orm
+# Фабрика сесій
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+# Базовий клас для моделей
 Base = declarative_base()
 
-# Dependency для отримання сесії
+# Dependency для отримання сесії бази даних
 def get_db():
+    """
+    Генератор для отримання сесії бази даних.
+    Використовується як FastAPI Dependency.
+    """
     db = SessionLocal()
     try:
         yield db
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
