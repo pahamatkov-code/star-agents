@@ -12,23 +12,22 @@
 
 ## 🚀 Overview
 
-Star Agents is a production-ready AI system that automates customer support for e-commerce businesses. It handles **70% of repetitive customer inquiries** via Telegram bot with LLM-powered intent recognition and provides real-time analytics dashboard.
+Star Agents is a production-ready AI system that automates customer support for e-commerce businesses via Telegram bot with LLM-powered intent recognition and provides real-time analytics dashboard.
 
-**Key metrics:**
-- ⚡ Latency: **<0.7 seconds**
-- 📊 **300+ daily requests**
-- 🎯 **8 business intents** detected automatically
-- 💯 **0 critical failures** in production
+**Key features:**
+- ⚡ Fast responses (AI-powered)
+- 📊 Real-time analytics dashboard
+- 🎯 Intent classification (8 business intents)
+- 🔄 Automatic handover to human agent
 
 ---
 
 ## 🧠 Features
 
 ### 🤖 AI Telegram Bot
-- Natural language responses in Ukrainian/Polish
+- Natural language responses (Ukrainian/English)
 - Intent classification (delivery, payment, returns, warranty, etc.)
 - Automatic handover to human agent for complex cases
-- Nova Poshta tracking integration
 
 ### 📊 Admin Dashboard
 - Real-time request analytics
@@ -72,7 +71,8 @@ docker compose up --build
 # 4. Access
 # API: http://localhost:8000
 # Dashboard: http://localhost:8000/admin
-# API Docs: http://localhost:8000/docsstar-agents/
+# API Docs: http://localhost:8000/docs
+star-agents/
 ├── app/
 │   ├── api/v1/          # API endpoints
 │   ├── core/            # Config, database, security
@@ -84,7 +84,8 @@ docker compose up --build
 ├── docker-compose.yml   # Infrastructure
 ├── Dockerfile          # Application container
 ├── requirements.txt    # Python dependencies
-└── .env.example        # Environment variables template📊 Demo
+└── .env.example        # Environment variables template
+📊 Demo
 🎥 Watch 60-second demo: LinkedIn Video
 
 📄 License
@@ -102,13 +103,3 @@ LinkedIn: pavel-matkovsky
 ⭐ Support
 If you find this project useful, please consider giving it a star ⭐ on GitHub.
 
-text
-
----
-
-## 🔧 КРОК 2: ДОДАЄМО І ЗБЕРІГАЄМО
-
-```bash
-git add README.md
-git commit -m "Update README: professional description with badges, metrics, and demo link"
-git push origin main
